@@ -1,7 +1,51 @@
 import numpy as np
 from statsmodels.tsa.arima.model import ARIMA
-from pmdarima import auto_arima
+from statsmodels.tsa.stattools import adfuller
 import config
+
+def check_stationarity(series):
+    """
+    Check if a time series is stationary using the Augmented Dickey-Fuller test.
+    """
+    result = adfuller(series)
+    p_value = result[1]
+    is_stationary = p_value <= 0.05
+    
+    print(f"ADF Statistic: {result[0]:.6f}")
+    print(f"p-value: {p_value:.6f}")
+    print(f"Is stationary: {is_stationary}")
+    
+    return is_stationary, p_value
+
+def determine_arima_order(series):
+    """
+    Determine the best order for ARIMA model using a simple grid search.
+    """
+    # Check stationarity to determine d
+    is_stationary, _ = check_stationarity(series)
+    d = 0 if is_stationary else 1
+    
+    # Grid search for p and q
+    best_aic = float('inf')
+    best_order = None
+    
+    for p in range(0, 3):
+        for q in range(0, 3):
+            try:
+                model = ARIMA(series, order=(p, d, q))
+                model_fit = model.fit()
+                aic = model_fit.aic
+                
+                if aic < best_aic:
+                    best_aic = aic
+                    best_order = (p, d, q)
+                    
+                print(f"ARIMA({p},{d},{q}) - AIC: {aic}")
+            except:
+                continue
+    
+    print(f"Best order: ARIMA{best_order} with AIC: {best_aic}")
+    return best_order
 
 def train_arima_model(series, params=None):
     """
@@ -28,22 +72,15 @@ def auto_arima_model(series):
     Automatically select best ARIMA parameters and train model.
     """
     # Find the best parameters
-    model = auto_arima(
-        series,
-        start_p=1, start_q=1,
-        max_p=3, max_q=3,
-        m=1,  # No seasonality
-        d=None,  # Let auto_arima determine 'd'
-        seasonal=False,
-        trace=True,
-        error_action='ignore',
-        suppress_warnings=True,
-        stepwise=True
-    )
+    best_order = determine_arima_order(series)
     
-    print(model.summary())
+    # Train the model with the best parameters
+    model = ARIMA(series, order=best_order)
+    model_fit = model.fit()
     
-    return model
+    print(model_fit.summary())
+    
+    return model_fit
 
 def predict_arima(model, n_periods):
     """
