@@ -52,7 +52,7 @@ def plot_predictions(actual, predictions, dates, title="Actual vs Predicted"):
     plt.tight_layout()
     plt.show()
 
-def plot_model_comparison(results, metric=None):
+def plot_model_comparison(results, metrics=None):
     """
     Plot model comparison.
     

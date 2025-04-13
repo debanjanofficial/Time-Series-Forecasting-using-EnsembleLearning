@@ -22,7 +22,7 @@ from models.arima_model import train_arima_model, auto_arima_model, predict_arim
 from models.rf_model import train_rf_model
 from models.svr_model import train_svr_model
 from evaluation import evaluate_models
-from prediction import generate_predictions, create_ensemble_prediction, prepare_submission
+from prediction import generate_predictions, create_ensemble_prediction, prepare_submission, generate_test_file_predictions
 
 def main():
     """
@@ -107,7 +107,8 @@ def main():
         # Step 6: Model Comparison and Evaluation
         print(f"\n--- Step 6: Model Comparison and Evaluation for Segment {segment} ---")
         results = evaluate_models(models, X_test, y_test)
-        plot_model_comparison(results, metric=['mae', 'rmse'])
+        plot_model_comparison(results, metrics=['mae'])
+        plot_model_comparison(results, metrics=['rmse'])
         
         # Save models for this segment
         all_models[segment] = models
@@ -124,20 +125,37 @@ def main():
         # Save predictions for this segment
         all_predictions[segment] = segment_predictions
     
-    # Step 8: Create Submission
+    # Step 8: Creating Submission
     print("\n--- Step 8: Creating Submission ---")
-    
-    # Prepare submission file
-    submission = prepare_submission(all_predictions, 
-                                   {1: df_test[df_test['segment'] == 1]['application_date'].values,
-                                    2: df_test[df_test['segment'] == 2]['application_date'].values}, 
-                                   df_sample_sub)
-    
+
+    # Generate predictions specifically for the test file
+    print("Generating test file specific predictions...")
+    all_test_predictions = {}
+    for segment in segments:
+        print(f"\nProcessing test predictions for Segment {segment}...")
+        all_test_predictions[segment] = generate_test_file_predictions(
+            all_models[segment], df_train, df_test, 
+            window_size=config.WINDOW_SIZE, segment=segment
+        )
+        
+        # Print sample of predictions
+        if not all_test_predictions[segment].empty:
+            print(f"Sample of test predictions for Segment {segment}:")
+            print(all_test_predictions[segment].head())
+
+    # Create submission with the test file predictions
+    print("\nPreparing final submission file...")
+    submission = prepare_submission(
+        all_test_predictions,
+        {1: df_test[df_test['segment'] == 1]['application_date'].values,
+        2: df_test[df_test['segment'] == 2]['application_date'].values},
+        df_sample_sub
+    )
+
     # Save submission
     submission.to_csv('submission.csv', index=False)
     print("Submission saved to submission.csv")
-    
-    print("\nTime Series Forecasting Pipeline completed successfully.")
+
 
 if __name__ == "__main__":
     main()
