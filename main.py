@@ -107,7 +107,7 @@ def main():
         # Step 6: Model Comparison and Evaluation
         print(f"\n--- Step 6: Model Comparison and Evaluation for Segment {segment} ---")
         results = evaluate_models(models, X_test, y_test)
-        plot_model_comparison(results, metric='mape')
+        plot_model_comparison(results, metric=['mae', 'rmse'])
         
         # Save models for this segment
         all_models[segment] = models

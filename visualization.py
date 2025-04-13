@@ -52,7 +52,7 @@ def plot_predictions(actual, predictions, dates, title="Actual vs Predicted"):
     plt.tight_layout()
     plt.show()
 
-def plot_model_comparison(results, metric='mape'):
+def plot_model_comparison(results, metric=None):
     """
     Plot model comparison.
     
@@ -60,21 +60,36 @@ def plot_model_comparison(results, metric='mape'):
         results: Dictionary of model results
         metric: Metric to use for comparison
     """
-    models = list(results.keys())
-    values = [results[model][metric] for model in models]
+    if metrics is None:
+        metrics = ['mape']
     
-    plt.figure(figsize=(10, 6))
-    bars = plt.bar(models, values)
+    # Create a figure with subplots for each metric
+    fig, axes = plt.subplots(len(metrics), 1, figsize=(12, 6*len(metrics)))
     
-    # Add value labels on top of bars
-    for bar in bars:
-        height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width()/2., height + 0.01,
-                 f'{height:.2f}', ha='center', va='bottom')
+    # Handle the case of a single metric (axes won't be array)
+    if len(metrics) == 1:
+        axes = [axes]
     
-    plt.title(f'Model Comparison - {metric.upper()}')
-    plt.xlabel('Models')
-    plt.ylabel(metric.upper())
+    for i, metric in enumerate(metrics):
+        models = list(results.keys())
+        # Filter out models that don't have this metric
+        models = [model for model in models if metric in results[model]]
+        values = [results[model][metric] for model in models]
+        
+        # Create bar chart
+        bars = axes[i].bar(models, values)
+        
+        # Add value labels on top of bars
+        for bar in bars:
+            height = bar.get_height()
+            axes[i].text(bar.get_x() + bar.get_width()/2., height + 0.01,
+                     f'{height:.2f}', ha='center', va='bottom')
+        
+        # Add labels and title
+        axes[i].set_title(f'Model Comparison - {metric.upper()}')
+        axes[i].set_xlabel('Models')
+        axes[i].set_ylabel(metric.upper())
+    
     plt.tight_layout()
     plt.show()
 
