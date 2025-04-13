@@ -40,7 +40,7 @@ def evaluate_models(models, X_test, y_test):
     for name, model in models.items():
         # Generate predictions
         if name in ['lstm', 'gru']:
-            y_pred = model(X_test).cpu().numpy()
+            y_pred = model(X_test).detach().cpu().numpy()
         elif name == 'arima':
             y_pred = model.forecast(len(y_test))
         else:  # Random Forest and SVR

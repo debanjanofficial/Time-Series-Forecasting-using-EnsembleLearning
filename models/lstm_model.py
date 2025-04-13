@@ -117,5 +117,6 @@ def predict_lstm(model, X_test):
     model.eval()
     with torch.no_grad():
         predictions = model(X_test)
+        predictions = predictions.detach()
     
     return predictions

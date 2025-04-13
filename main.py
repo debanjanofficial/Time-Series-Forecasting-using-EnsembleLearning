@@ -18,7 +18,7 @@ from visualization import (
 )
 from models.lstm_model import train_lstm_model
 from models.gru_model import train_gru_model
-from models.arima_model import auto_arima_model
+from models.arima_model import train_arima_model, auto_arima_model, predict_arima
 from models.rf_model import train_rf_model
 from models.svr_model import train_svr_model
 from evaluation import evaluate_models

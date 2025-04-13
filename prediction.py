@@ -15,11 +15,11 @@ def generate_predictions(models, X_test, scaler, segment):
     
     # Generate predictions for each model
     if 'lstm' in models:
-        lstm_preds = predict_lstm(models['lstm'], X_test).cpu().numpy()
+        lstm_preds = predict_lstm(models['lstm'], X_test).detach().cpu().numpy()
         preds['lstm'] = scaler.inverse_transform(lstm_preds)
     
     if 'gru' in models:
-        gru_preds = predict_gru(models['gru'], X_test).cpu().numpy()
+        gru_preds = predict_gru(models['gru'], X_test).detach().cpu().numpy()
         preds['gru'] = scaler.inverse_transform(gru_preds)
     
     if 'arima' in models:
